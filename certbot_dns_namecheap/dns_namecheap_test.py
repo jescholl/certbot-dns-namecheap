@@ -13,7 +13,6 @@ from certbot.tests import util as test_util
 
 API_KEY = 'foo'
 API_USER = 'bar'
-CLIENT_IP = "127.0.0.1"
 
 
 class AuthenticatorTest(test_util.TempDirTestCase,
@@ -30,7 +29,6 @@ class AuthenticatorTest(test_util.TempDirTestCase,
         dns_test_common.write({
             "namecheap_api_key": API_KEY,
             'namecheap_api_user': API_USER,
-            'namecheap_client_ip': CLIENT_IP
             }, path)
 
         self.config = mock.MagicMock(namecheap_credentials=path,
