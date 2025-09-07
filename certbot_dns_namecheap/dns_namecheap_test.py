@@ -1,58 +1,43 @@
-"""Tests for certbot_dns_namecheap.dns_namecheap."""
+"""Tests for certbot_dns_namecheap._internal.dns_namecheap."""
+from unittest import mock
+import sys
 
-import os
-import unittest
-
-import mock
+import pytest
+from requests import Response
 from requests.exceptions import HTTPError
 
+from certbot.compat import os
 from certbot.plugins import dns_test_common
 from certbot.plugins import dns_test_common_lexicon
 from certbot.tests import util as test_util
 
-USERNAME = 'foo'
-API_KEY = 'bar'
+API_KEY = 'foo'
+API_USER = 'bar'
+CLIENT_IP = "127.0.0.1"
 
 
 class AuthenticatorTest(test_util.TempDirTestCase,
-                        dns_test_common_lexicon.BaseLexiconAuthenticatorTest):
+                        dns_test_common_lexicon.BaseLexiconDNSAuthenticatorTest):
+
+    LOGIN_ERROR = HTTPError('401 Client Error: Unauthorized for url: ...', response=Response())
 
     def setUp(self):
-        super(AuthenticatorTest, self).setUp()
+        super().setUp()
 
         from certbot_dns_namecheap.dns_namecheap import Authenticator
 
         path = os.path.join(self.tempdir, 'file.ini')
-        credentials = {
-            "namecheap_username": USERNAME,
-            "namecheap_api_key": API_KEY
-        }
-        dns_test_common.write(credentials, path)
+        dns_test_common.write({
+            "namecheap_api_key": API_KEY,
+            'namecheap_api_user': API_USER,
+            'namecheap_client_ip': CLIENT_IP
+            }, path)
 
         self.config = mock.MagicMock(namecheap_credentials=path,
                                      namecheap_propagation_seconds=0)  # don't wait during tests
 
         self.auth = Authenticator(self.config, "namecheap")
 
-        self.mock_client = mock.MagicMock()
-        # _get_namecheap_client | pylint: disable=protected-access
-        self.auth._get_namecheap_client = mock.MagicMock(return_value=self.mock_client)
-
-
-class NamecheapLexiconClientTest(unittest.TestCase, dns_test_common_lexicon.BaseLexiconClientTest):
-    DOMAIN_NOT_FOUND = Exception('Domain example.com not found')
-    LOGIN_ERROR = HTTPError('403 Client Error: Forbidden')
-
-    def setUp(self):
-        from certbot_dns_namecheap.dns_namecheap import _NamecheapLexiconClient
-
-        self.client = _NamecheapLexiconClient(
-            USERNAME, API_KEY, 0, 'example.com'
-        )
-
-        self.provider_mock = mock.MagicMock()
-        self.client.provider = self.provider_mock
-
 
 if __name__ == "__main__":
-    unittest.main()  # pragma: no cover
+    sys.exit(pytest.main(sys.argv[1:] + [__file__]))  # pragma: no cover
