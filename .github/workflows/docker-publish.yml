@@ -32,6 +32,18 @@ jobs:
         with:
           fetch-depth: 0  # full history required for auto-tag
 
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # The final stage doesn't depend on the test stage, so BuildKit skips it
+      # unless it's targeted. Runs before tagging so a failure cuts no release.
+      - name: Run tests
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          target: test
+          cache-from: type=gha
+
       - name: Auto-tag
         id: autotag
         if: github.event_name != 'pull_request'
@@ -59,9 +71,6 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       # Login against a Docker registry except on PR
       - name: Log into registry ${{ env.REGISTRY }}
