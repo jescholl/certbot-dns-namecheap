@@ -4,6 +4,7 @@
   "forkProcessing": "enabled",
   "dependencyDashboard": true,
   "rebaseWhen": "conflicted",
+  "ignorePaths": ["local-oldest-requirements.txt"],
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch", "digest"],
